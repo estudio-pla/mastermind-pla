@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIOS PLÁ — Cérebro Completo v1.0.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:  #08080C;
+    --bg2: #0F0F16;
+    --bg3: #16161E;
+    --border: #2A2A35;
+    --text: #E2E2E8;
+    --muted: #6B6B7A;
+
+    --r1: #FF4444;
+    --r1-dim: rgba(255,68,68,0.10);
+    --r1-border: rgba(255,68,68,0.28);
+
+    --r2: #FF9500;
+    --r2-dim: rgba(255,149,0,0.10);
+    --r2-border: rgba(255,149,0,0.28);
+
+    --r3: #30D158;
+    --r3-dim: rgba(48,209,88,0.10);
+    --r3-border: rgba(48,209,88,0.28);
+
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+
+  .brand { display: flex; align-items: center; gap: 12px; }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .15em;
+    color: var(--r3);
+    background: var(--r3-dim);
+    border: 1px solid var(--r3-border);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  .brand h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -.02em;
+  }
+  .brand h1 em {
+    font-style: normal;
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 12px;
+    font-family: var(--mono);
+    margin-left: 8px;
+  }
+
+  .api-row { display: flex; align-items: center; gap: 8px; }
+
+  .api-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background .3s, box-shadow .3s;
+    flex-shrink: 0;
+  }
+  .api-dot.on { background: var(--r3); box-shadow: 0 0 6px var(--r3); }
+
+  .api-input {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    width: 230px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .api-input:focus { border-color: var(--r3-border); }
+  .api-input::placeholder { color: var(--muted); }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    gap: 16px;
+    padding: 20px 24px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--bg2);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-head {
+    padding: 11px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .lnum {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .panel-name { font-size: 13px; font-weight: 600; }
+  .panel-sub  { font-size: 10px; color: var(--muted); font-family: var(--mono); margin-left: auto; letter-spacing: .06em; }
+
+  /* Layer colours */
+  .l1 { border: 1px solid var(--r1-border); }
+  .l1 .panel-head { background: var(--r1-dim); }
+  .l1 .lnum  { background: var(--r1-dim); color: var(--r1); border: 1px solid var(--r1-border); }
+  .l1 .panel-name { color: var(--r1); }
+
+  .l2 { border: 1px solid var(--r2-border); }
+  .l2 .panel-head { background: var(--r2-dim); }
+  .l2 .lnum  { background: var(--r2-dim); color: var(--r2); border: 1px solid var(--r2-border); }
+  .l2 .panel-name { color: var(--r2); }
+
+  .l3 { border: 1px solid var(--r3-border); }
+  .l3 .panel-head { background: var(--r3-dim); }
+  .l3 .lnum  { background: var(--r3-dim); color: var(--r3); border: 1px solid var(--r3-border); }
+  .l3 .panel-name { color: var(--r3); }
+
+  /* ── RULES (L1) ── */
+  .rules {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: auto;
+    max-height: 420px;
+  }
+
+  .rule {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 10px;
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 6px;
+    align-items: start;
+  }
+
+  .rid {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--r1);
+    padding-top: 1px;
+  }
+
+  .rlabel {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 2px;
+  }
+  .rvalue {
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  /* ── MEMORY (L2) ── */
+  .memories {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    overflow-y: auto;
+    max-height: 320px;
+  }
+
+  .mem {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--r2);
+    border-radius: 5px;
+    padding: 9px 11px;
+  }
+
+  .mem-event { font-size: 12px; font-weight: 600; color: var(--r2); margin-bottom: 4px; }
+  .mem-causa { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+  .mem-block {
+    font-size: 11px;
+    display: flex; align-items: flex-start; gap: 6px;
+  }
+  .mem-block::before { content: "✕"; color: var(--r1); font-size: 10px; font-weight: 700; flex-shrink: 0; }
+
+  .add-mem { padding: 0 10px 10px; }
+
+  .btn-add-mem {
+    width: 100%;
+    padding: 7px;
+    background: var(--r2-dim);
+    border: 1px dashed var(--r2-border);
+    color: var(--r2);
+    font-family: var(--mono);
+    font-size: 11px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-add-mem:hover { background: rgba(255,149,0,0.18); }
+
+  .add-form { display: none; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .add-form.open { display: flex; }
+
+  .add-form input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    outline: none;
+  }
+  .add-form input:focus { border-color: var(--r2-border); }
+  .add-form input::placeholder { color: var(--muted); }
+
+  .add-btns { display: flex; gap: 6px; }
+
+  .btn-confirm {
+    flex: 1; padding: 7px;
+    background: var(--r2); color: #000;
+    border: none; border-radius: 4px;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-cancel-form {
+    padding: 7px 12px;
+    background: var(--bg3); color: var(--muted);
+    border: 1px solid var(--border); border-radius: 4px;
+    font-family: var(--mono); font-size: 11px;
+    cursor: pointer;
+  }
+
+  /* ── GERENTE (L3) ── */
+  .gerente-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .input-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 5px;
+  }
+
+  .task-input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 12px;
+    border-radius: 5px;
+    width: 100%;
+    height: 130px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+    transition: border-color .2s;
+  }
+  .task-input:focus { border-color: var(--r3-border); }
+  .task-input::placeholder { color: var(--muted); }
+
+  .steps { display: flex; flex-direction: column; gap: 7px; }
+
+  .step {
+    display: flex; align-items: center; gap: 9px;
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+  }
+
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: all .3s;
+  }
+  .dot.done  { background: var(--r3); border-color: var(--r3); }
+  .dot.active { border-color: var(--r3); animation: blink 1s infinite; }
+  .dot.err   { background: var(--r1); border-color: var(--r1); }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+  .btn-exec {
+    width: 100%;
+    padding: 11px;
+    background: var(--r3);
+    color: #000;
+    border: none; border-radius: 5px;
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    letter-spacing: .06em;
+    cursor: pointer;
+    transition: opacity .2s;
+    margin-top: auto;
+  }
+  .btn-exec:hover { opacity: .88; }
+  .btn-exec:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* ── OUTPUT ── */
+  .output {
+    grid-column: 1 / -1;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .out-head {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .out-title {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    color: var(--muted); text-transform: uppercase; letter-spacing: .1em;
+  }
+
+  .out-ts { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+  .out-body {
+    padding: 20px 22px;
+    font-family: var(--mono); font-size: 12px;
+    line-height: 1.85; color: var(--text);
+    min-height: 120px; white-space: pre-wrap;
+  }
+
+  .empty { color: var(--muted); font-style: italic; }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 10px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 820px) {
+    .grid { grid-template-columns: 1fr; }
+    .output { grid-column: 1; }
+    .api-input { width: 170px; }
+    .brand h1 em { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="header">
+  <div class="brand">
+    <span class="badge">BIOS PLÁ</span>
+    <h1>Mastermind <em>v1.0 · cofre pessoal de Kaue</em></h1>
+  </div>
+  <div class="api-row">
+    <div class="api-dot" id="memDot"></div>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">MEMÓRIA</span>
+    <div class="api-dot" id="apiDot"></div>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">GERENTE</span>
+  </div>
+</header>
+
+<!-- ═══ GRID ═══ -->
+<main class="grid">
+
+  <!-- L1: Reptiliano -->
+  <div class="panel l1">
+    <div class="panel-head">
+      <span class="lnum">L1</span>
+      <span class="panel-name">Reptiliano</span>
+      <span class="panel-sub">INSTINTO · IMUTÁVEL</span>
+    </div>
+    <div class="rules" id="rulesList"></div>
+  </div>
+
+  <!-- L2: Amígdala -->
+  <div class="panel l2">
+    <div class="panel-head">
+      <span class="lnum">L2</span>
+      <span class="panel-name">Amígdala</span>
+      <span class="panel-sub">MEMÓRIA DE ERRO</span>
+    </div>
+    <div class="memories" id="memList"></div>
+    <div class="add-mem">
+      <span style="font-family:var(--mono);font-size:9px;color:var(--muted);display:block;padding:4px 2px">
+        Memória lida de github.com/estudio-pla/bios-pla — novas entradas são adicionadas via commit, não aqui.
+      </span>
+    </div>
+  </div>
+
+  <!-- L3: Gerente -->
+  <div class="panel l3">
+    <div class="panel-head">
+      <span class="lnum">L3</span>
+      <span class="panel-name">Gerente</span>
+      <span class="panel-sub">DECISÃO · GEMINI</span>
+    </div>
+    <div class="gerente-body">
+      <div>
+        <div class="input-label">Tarefa ou pergunta</div>
+        <textarea class="task-input" id="taskInput"
+          placeholder="Descreva a tarefa ou pergunta para o Estúdio Plá..."></textarea>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="dot" id="d1"></div>Verificando regras Reptilianas (L1)</div>
+        <div class="step"><div class="dot" id="d2"></div>Consultando memória de erros (L2)</div>
+        <div class="step"><div class="dot" id="d3"></div>Enviando ao Gemini com contexto PLÁ</div>
+        <div class="step"><div class="dot" id="d4"></div>Sintetizando resposta</div>
+      </div>
+      <button class="btn-exec" id="execBtn" onclick="executar()">▶ EXECUTAR</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="output">
+    <div class="out-head">
+      <span class="out-title">Output · Gerente PLÁ</span>
+      <span class="out-ts" id="outTs">—</span>
+    </div>
+    <div class="out-body" id="outBody"><span class="empty">Aguardando execução...</span></div>
+  </div>
+
+</main>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <span>ESTÚDIO PLÁ · BIOS Cérebro Completo v1.3.0 · L1 puro, L2 hierárquico</span>
+  <span id="clock"></span>
+</footer>
+
+<script>
+// ════════════════════════════════════════════
+// DADOS — BIOS PLÁ v1.0.0
+// ════════════════════════════════════════════
+
+const BIOS = {
+
+  reptilianoIdentidade: [], // preenchido ao vivo por loadReptiliano() — lido de github.com/estudio-pla/bios-pla/reptiliano.json
+
+  amigdala: [] // preenchido ao vivo por loadAmigdala() — lido de github.com/estudio-pla/bios-pla/amigdala.json
+};
+
+// ════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════
+
+function renderRules() {
+  document.getElementById('rulesList').innerHTML = BIOS.reptilianoIdentidade.length
+    ? BIOS.reptilianoIdentidade.map(r => `
+      <div class="rule">
+        <span class="rid">${r.id}</span>
+        <div>
+          <div class="rlabel">${r.titulo}</div>
+          <div class="rvalue">${r.via_maquina}</div>
+        </div>
+      </div>`).join('')
+    : `<span class="empty" style="padding:8px;display:block;font-size:11px">Não conectado — cole o token do GitHub acima.</span>`;
+}
+
+async function loadReptiliano() {
+  try {
+    const res = await fetch('/api/memoria?file=reptiliano.json');
+    const parsed = await res.json();
+    if (parsed.error) throw new Error(parsed.error);
+    BIOS.reptilianoIdentidade = parsed.regras || [];
+    renderRules();
+  } catch (err) {
+    console.error('Erro ao ler reptiliano.json:', err.message);
+  }
+}
+function renderMem() {
+  if (!BIOS.amigdala.length) {
+    document.getElementById('memList').innerHTML =
+      '<span class="empty" style="padding:8px;display:block">Memória vazia ou não conectada — cole o token do GitHub acima.</span>';
+    return;
+  }
+  const estrutural = BIOS.amigdala.filter(e => e.prioridade === 'estrutural');
+  const pontual     = BIOS.amigdala.filter(e => e.prioridade !== 'estrutural');
+
+  const memHtml = e => `
+      <div class="mem" style="${e.prioridade==='estrutural' ? 'border-left-width:4px' : ''}">
+        <div class="mem-event">${e.titulo || e.evento || e.id}</div>
+        <div class="mem-causa">${e.data || ''} · ${e.tipo || ''}</div>
+        <div class="mem-block">${e.regra_derivada || e.bloqueado || e.conteudo || ''}</div>
+      </div>`;
+
+  let html = '';
+  if (estrutural.length) {
+    html += `<div style="font-size:9px;color:var(--muted);letter-spacing:.1em;padding:2px 2px 4px">ESTRUTURAL · SEGURA O TETO</div>`;
+    html += estrutural.map(memHtml).join('');
+  }
+  if (pontual.length) {
+    html += `<div style="font-size:9px;color:var(--muted);letter-spacing:.1em;padding:10px 2px 4px">PONTUAL · APRENDIZADO ESPECÍFICO</div>`;
+    html += pontual.map(memHtml).join('');
+  }
+  document.getElementById('memList').innerHTML = html;
+}
+
+// ════════════════════════════════════════════
+// MEMÓRIA REAL — LEITURA AO VIVO DO GITHUB
+// ════════════════════════════════════════════
+
+async function loadAmigdala() {
+  try {
+    const res = await fetch('/api/memoria?file=amigdala.json');
+    const parsed = await res.json();
+    if (parsed.error) throw new Error(parsed.error);
+    BIOS.amigdala = parsed.entradas || [];
+    renderMem();
+    document.getElementById('memDot').classList.add('on');
+  } catch (err) {
+    document.getElementById('memList').innerHTML =
+      `<span style="color:var(--r1);padding:8px;display:block">Erro ao ler memória: ${err.message}</span>`;
+  }
+}
+
+// ════════════════════════════════════════════
+// API KEY
+// ════════════════════════════════════════════
+
+function markGerenteOn() {
+  document.getElementById('apiDot').classList.add('on');
+}
+
+// ════════════════════════════════════════════
+// DOTS
+// ════════════════════════════════════════════
+
+function resetDots() {
+  [1,2,3,4].forEach(i => document.getElementById(`d${i}`).className = 'dot');
+}
+
+function setDot(i, state) {
+  document.getElementById(`d${i}`).className = `dot ${state}`;
+}
+
+async function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ════════════════════════════════════════════
+// SYSTEM PROMPT
+// ════════════════════════════════════════════
+
+function buildPrompt() {
+  const identidade = BIOS.reptilianoIdentidade
+    .map(r => `  • [${r.id}] ${r.titulo}: ${r.via_maquina}`).join('\n') || '  (identidade não conectada)';
+
+  const estrutural = BIOS.amigdala.filter(e => e.prioridade === 'estrutural')
+    .map(e => `  • [${e.id}] ${e.titulo}: ${e.regra_derivada || e.conteudo}`).join('\n') || '  (nenhuma)';
+  const pontual = BIOS.amigdala.filter(e => e.prioridade !== 'estrutural')
+    .map(e => `  • [${e.id}] "${e.titulo}" | ${e.conteudo} | regra: ${e.regra_derivada}`).join('\n') || '  (nenhuma)';
+
+  return `Você é o GERENTE do BIOS PLÁ — Cérebro Completo v1.3.0.
+Opera no Estúdio Plá de Kaue Ferreira Moraes (Bauru, SP) — estúdio profissional de produção musical assistida por IA.
+
+╔══ LAYER 1 — REPTILIANO (Regra Zero + Três Diretrizes — a única coisa que nunca muda) ══╗
+${identidade}
+
+╔══ LAYER 2a — AMÍGDALA ESTRUTURAL (regras de produto — seguram o teto, quase-fixas) ══╗
+${estrutural}
+
+╔══ LAYER 2b — AMÍGDALA PONTUAL (aprendizado de eventos específicos) ══╗
+${pontual}
+
+╔══ LAYER 3 — VOCÊ (Gerente) ══╗
+Sua missão:
+1. Verificar se a tarefa respeita a Identidade (L1) acima de tudo
+2. Verificar se a tarefa respeita as regras estruturais e evita os caminhos pontuais bloqueados (L2)
+3. Se identificar risco, alertar ANTES de propor solução
+4. Responder de forma direta, técnica, sem enrolação
+5. Nunca repetir erros já registrados na Amígdala
+
+Responda sempre em português. Seja objetivo e útil.`;
+}
+
+// ════════════════════════════════════════════
+// EXECUTAR
+// ════════════════════════════════════════════
+
+async function executar() {
+  const input = document.getElementById('taskInput').value.trim();
+  const btn   = document.getElementById('execBtn');
+  const body  = document.getElementById('outBody');
+  const ts    = document.getElementById('outTs');
+
+  if (!input) { body.innerHTML = '<span style="color:var(--r2)">⚠ Digite uma tarefa ou pergunta.</span>'; return; }
+
+  btn.disabled = true;
+  resetDots();
+  body.innerHTML = '<span class="empty">Processando...</span>';
+
+  try {
+    setDot(1,'active'); await wait(500); setDot(1,'done');
+    setDot(2,'active'); await wait(400); setDot(2,'done');
+    setDot(3,'active');
+
+    const res = await fetch('/api/gerente', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemPrompt: buildPrompt(),
+        userInput: input
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const text = data.text;
+    if (!text) throw new Error('Resposta vazia do Gemini.');
+
+    setDot(3,'done');
+    setDot(4,'active'); await wait(300); setDot(4,'done');
+
+    ts.textContent = new Date().toLocaleString('pt-BR');
+    body.innerHTML = '';
+    body.textContent = text;
+
+  } catch (err) {
+    [1,2,3,4].forEach(i => {
+      const d = document.getElementById(`d${i}`);
+      if (!d.className.includes('done')) d.className = 'dot err';
+    });
+    body.innerHTML = `<span style="color:var(--r1)">ERRO: ${err.message}</span>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════════
+// CLOCK
+// ════════════════════════════════════════════
+
+function tick() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleString('pt-BR');
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+renderRules();
+renderMem();
+tick();
+setInterval(tick, 1000);
+
+loadAmigdala();
+loadReptiliano();
+markGerenteOn();
+</script>
+</body>
+</html>
