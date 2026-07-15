@@ -415,7 +415,7 @@
 <header class="header">
   <div class="brand">
     <span class="badge">BIOS PLÁ</span>
-    <h1>Mastermind <em>v1.0 · cofre pessoal de Kaue</em></h1>
+    <h1>Mastermind <em>v1.1 · voz de entrada e saída</em></h1>
   </div>
   <div class="api-row">
     <div class="api-dot" id="memDot"></div>
@@ -465,6 +465,12 @@
         <div class="input-label">Tarefa ou pergunta</div>
         <textarea class="task-input" id="taskInput"
           placeholder="Descreva a tarefa ou pergunta para o Estúdio Plá..."></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button type="button" id="micBtn" onclick="toggleMic()"
+            style="flex:1;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:20px;cursor:pointer">🎙</button>
+          <button type="button" id="execBtnTop" onclick="executar()"
+            style="flex:2;padding:10px;background:var(--r3-dim);border:1px solid var(--r3-border);border-radius:6px;color:var(--r3);font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer">↑ ENVIAR</button>
+        </div>
       </div>
       <div class="steps">
         <div class="step"><div class="dot" id="d1"></div>Verificando regras Reptilianas (L1)</div>
@@ -480,6 +486,8 @@
   <div class="output">
     <div class="out-head">
       <span class="out-title">Output · Gerente PLÁ</span>
+      <button type="button" id="playBtn" onclick="falarResposta()"
+        style="background:var(--r3-dim);border:1px solid var(--r3-border);border-radius:5px;color:var(--r3);font-size:14px;padding:4px 10px;cursor:pointer;margin-left:10px">▶ OUVIR</button>
       <span class="out-ts" id="outTs">—</span>
     </div>
     <div class="out-body" id="outBody"><span class="empty">Aguardando execução...</span></div>
@@ -640,6 +648,76 @@ Responda sempre em português. Seja objetivo e útil.`;
 // ════════════════════════════════════════════
 // EXECUTAR
 // ════════════════════════════════════════════
+
+// ════════════════════════════════════════════
+// VOZ — MICROFONE (fala → texto) E LEITURA (texto → fala)
+// ════════════════════════════════════════════
+
+let _recognition = null;
+let _listening = false;
+
+function toggleMic() {
+  const btn = document.getElementById('micBtn');
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRec) {
+    alert('Este navegador não suporta reconhecimento de voz. Use o Chrome.');
+    return;
+  }
+
+  if (_listening) {
+    if (_recognition) _recognition.stop();
+    return;
+  }
+
+  _recognition = new SpeechRec();
+  _recognition.lang = 'pt-BR';
+  _recognition.continuous = true;
+  _recognition.interimResults = false;
+
+  _recognition.onstart = () => {
+    _listening = true;
+    btn.style.background = 'var(--r1-dim)';
+    btn.style.borderColor = 'var(--r1-border)';
+    btn.style.color = 'var(--r1)';
+    btn.textContent = '● OUVINDO';
+  };
+
+  _recognition.onresult = (event) => {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    const input = document.getElementById('taskInput');
+    input.value = (input.value ? input.value + ' ' : '') + transcript;
+  };
+
+  _recognition.onerror = (event) => {
+    console.error('Erro no microfone:', event.error);
+  };
+
+  _recognition.onend = () => {
+    _listening = false;
+    btn.style.background = 'var(--bg3)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--text)';
+    btn.textContent = '🎙';
+  };
+
+  _recognition.start();
+}
+
+function falarResposta() {
+  const body = document.getElementById('outBody');
+  const text = body.textContent.trim();
+  if (!text || text === 'Aguardando execução...') return;
+
+  window.speechSynthesis.cancel(); // para qualquer fala anterior
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'pt-BR';
+  utter.rate = 1.0;
+  window.speechSynthesis.speak(utter);
+}
 
 async function executar() {
   const input = document.getElementById('taskInput').value.trim();
