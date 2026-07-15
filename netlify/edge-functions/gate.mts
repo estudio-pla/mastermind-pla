@@ -89,7 +89,20 @@ export default async (req, context) => {
     if (req.method === 'POST') {
       const form = await req.formData();
       const attempt = form.get('password');
-      if (attempt && expectedHash && (await hashPassword(attempt)) === expectedHash) {
+      const attemptHash = attempt ? await hashPassword(attempt) : null;
+
+      // DEBUG temporário
+      if (url.searchParams.get('debug') === '1') {
+        return new Response(JSON.stringify({
+          gatePasswordSet: !!gatePassword,
+          attempt,
+          attemptHash,
+          expectedHash,
+          match: attemptHash === expectedHash
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      if (attempt && expectedHash && attemptHash === expectedHash) {
         return new Response(null, {
           status: 302,
           headers: {
