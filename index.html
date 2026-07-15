@@ -415,7 +415,7 @@
 <header class="header">
   <div class="brand">
     <span class="badge">BIOS PLÁ</span>
-    <h1>Mastermind <em>v1.3 · memória eterna, nunca apaga</em></h1>
+    <h1>Mastermind <em>v1.4 · multiusuário e agenda</em></h1>
   </div>
   <div class="api-row">
     <div class="api-dot" id="memDot"></div>
@@ -779,6 +779,18 @@ async function executar() {
 
   body.innerHTML = '<span class="empty">Processando...</span>';
 
+  const MENSAGENS_ESPERA = [
+    'Consultando a Regra Zero e as Três Diretrizes...',
+    'Verificando o que já foi aprendido antes, pra não repetir erro...',
+    'Conversando com o Gemini, pode levar alguns segundos...',
+    'Organizando a resposta pra você...'
+  ];
+  let _msgIdx = 0;
+  const _msgInterval = setInterval(() => {
+    _msgIdx = (_msgIdx + 1) % MENSAGENS_ESPERA.length;
+    body.innerHTML = `<span class="empty">${MENSAGENS_ESPERA[_msgIdx]}</span>`;
+  }, 2200);
+
   try {
     setDot(1,'active'); await wait(500); setDot(1,'done');
     setDot(2,'active'); await wait(400); setDot(2,'done');
@@ -816,6 +828,7 @@ async function executar() {
     });
     body.innerHTML = `<span style="color:var(--r1)">ERRO: ${err.message}</span>`;
   } finally {
+    clearInterval(_msgInterval);
     btn.disabled = false; if (typeof btnTop !== 'undefined' && btnTop) btnTop.disabled = false;
   }
 }
@@ -840,6 +853,32 @@ setInterval(tick, 1000);
 loadAmigdala();
 loadReptiliano();
 markGerenteOn();
+identificarUsuarioEAgenda();
+
+async function identificarUsuarioEAgenda() {
+  try {
+    const who = await fetch('/api/whoami').then(r => r.json());
+    if (who.ok && who.usuario) {
+      const nome = who.usuario.charAt(0).toUpperCase() + who.usuario.slice(1);
+      const h1 = document.querySelector('.brand h1');
+      if (h1) h1.innerHTML = `Mastermind <em>bem-vindo, ${nome}</em>`;
+    }
+  } catch (_) {}
+
+  try {
+    const ag = await fetch('/api/agenda').then(r => r.json());
+    if (ag.ok && ag.eventos && ag.eventos.length) {
+      const proximos = ag.eventos.filter(e => e.diasFaltando <= 35);
+      if (proximos.length) {
+        const body = document.getElementById('outBody');
+        const linhas = proximos.map(e =>
+          `• ${e.titulo} — em ${e.diasFaltando} dia${e.diasFaltando === 1 ? '' : 's'}`
+        ).join('\n');
+        body.textContent = `Avisos da agenda:\n${linhas}`;
+      }
+    }
+  } catch (_) {}
+}
 </script>
 </body>
 </html>

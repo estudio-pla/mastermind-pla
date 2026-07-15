@@ -10,6 +10,15 @@ function getCookie(req, name) {
   return match ? match[1] : null;
 }
 
+function getUsers() {
+  try {
+    const raw = Netlify.env.get('GATE_USERS');
+    return raw ? JSON.parse(raw) : {};
+  } catch (_) {
+    return {};
+  }
+}
+
 const LOGIN_PAGE = (error) => `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -42,13 +51,13 @@ const LOGIN_PAGE = (error) => `<!DOCTYPE html>
     border: 1px solid #2A2A35;
     color: #E2E2E8;
     font-family: 'Courier New', monospace;
-    font-size: 20px;
-    letter-spacing: 4px;
+    font-size: 16px;
+    letter-spacing: 2px;
     text-align: center;
     padding: 14px;
     border-radius: 6px;
     outline: none;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
   input:focus { border-color: #30D158; }
   button {
@@ -63,6 +72,7 @@ const LOGIN_PAGE = (error) => `<!DOCTYPE html>
     padding: 14px;
     border-radius: 6px;
     cursor: pointer;
+    margin-top: 4px;
   }
   .error { color: #FF4444; font-size: 12px; margin-bottom: 16px; }
 </style>
@@ -70,9 +80,10 @@ const LOGIN_PAGE = (error) => `<!DOCTYPE html>
 <body>
   <div class="box">
     <h1>ESTÚDIO PLÁ · MASTERMIND</h1>
-    ${error ? '<div class="error">Senha incorreta</div>' : ''}
+    ${error ? '<div class="error">Usuário ou senha incorretos</div>' : ''}
     <form method="POST" action="/__login">
-      <input type="password" name="password" placeholder="••••••" autofocus autocomplete="off">
+      <input type="text" name="usuario" placeholder="usuário" autocomplete="off" autofocus>
+      <input type="password" name="password" placeholder="senha" autocomplete="off">
       <button type="submit">ENTRAR</button>
     </form>
   </div>
@@ -81,20 +92,23 @@ const LOGIN_PAGE = (error) => `<!DOCTYPE html>
 
 export default async (req, context) => {
   const url = new URL(req.url);
-  const gatePassword = Netlify.env.get('GATE_PASSWORD');
-  const expectedHash = gatePassword ? await hashPassword(gatePassword) : null;
+  const users = getUsers();
 
   // Rota de login — processa o POST do formulário
   if (url.pathname === '/__login') {
     if (req.method === 'POST') {
       const form = await req.formData();
+      const usuario = (form.get('usuario') || '').trim().toLowerCase();
       const attempt = form.get('password');
-      if (attempt && expectedHash && (await hashPassword(attempt)) === expectedHash) {
+      const senhaReal = users[usuario];
+
+      if (usuario && attempt && senhaReal && attempt === senhaReal) {
+        const hash = await hashPassword(senhaReal);
         return new Response(null, {
           status: 302,
           headers: {
             'Location': '/',
-            'Set-Cookie': `bios_gate=${expectedHash}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`
+            'Set-Cookie': `bios_gate=${usuario}.${hash}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`
           }
         });
       }
@@ -109,9 +123,22 @@ export default async (req, context) => {
     });
   }
 
-  // Qualquer outra rota — verifica o cookie
+  // Verifica quem está logado, a partir do cookie
   const cookie = getCookie(req, 'bios_gate');
-  if (!expectedHash || cookie !== expectedHash) {
+  const [cookieUser, cookieHash] = cookie ? cookie.split('.') : [null, null];
+  const senhaEsperada = cookieUser ? users[cookieUser] : null;
+  const hashEsperado = senhaEsperada ? await hashPassword(senhaEsperada) : null;
+  const autenticado = cookieUser && cookieHash && hashEsperado && cookieHash === hashEsperado;
+
+  // Rota interna — quem está logado agora (usada pelo frontend para personalizar)
+  if (url.pathname === '/api/whoami') {
+    return new Response(JSON.stringify({
+      ok: !!autenticado,
+      usuario: autenticado ? cookieUser : null
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  if (!autenticado) {
     return new Response(null, {
       status: 302,
       headers: { 'Location': '/__login' }

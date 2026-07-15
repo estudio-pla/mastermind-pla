@@ -45,3 +45,17 @@
 ## v1.3.1 — correção
 - Adicionado package.json com dependência @netlify/blobs (faltava, causava erro
   "Cannot find package" nas funções de registrar/buscar).
+
+## v1.4 — 2026-07-15
+- MULTIUSUÁRIO: o cofre agora aceita usuário + senha (não só senha única). Cada
+  pessoa tem seu próprio par de acesso, configurado em GATE_USERS (servidor,
+  nunca no código). Kaue configurado como primeiro usuário.
+- Rota /api/whoami identifica quem está logado, e o Mastermind cumprimenta pelo
+  nome (ex: "bem-vindo, Kaue").
+- AGENDA PERMANENTE (/api/agenda): memória de datas e lembretes, sem função de
+  apagar (mesma regra da memória eterna). Ao entrar, o sistema já avisa sozinho
+  os eventos que estão chegando nos próximos 35 dias — não precisa perguntar.
+- Texto de espera agora é preparado e rotativo (4 mensagens diferentes a cada
+  ~2s) em vez de um "Processando..." estático parado.
+- Pendente: aniversário da Luana ainda não cadastrado — falta a data (dia/mês).
+  Luana ainda não tem usuário/senha próprios em GATE_USERS.
