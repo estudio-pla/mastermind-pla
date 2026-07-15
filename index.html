@@ -415,7 +415,7 @@
 <header class="header">
   <div class="brand">
     <span class="badge">BIOS PLÁ</span>
-    <h1>Mastermind <em>v1.1 · voz de entrada e saída</em></h1>
+    <h1>Mastermind <em>v1.2 · voz limpa e respostas sempre humanas</em></h1>
   </div>
   <div class="api-row">
     <div class="api-dot" id="memDot"></div>
@@ -707,15 +707,39 @@ function toggleMic() {
   _recognition.start();
 }
 
+let _preferredVoice = null;
+
+function pickBestVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  const ptVoices = voices.filter(v => v.lang.toLowerCase().startsWith('pt'));
+  // Tenta achar voz masculina explícita primeiro
+  const male = ptVoices.find(v => /male|homem|daniel|ricardo|felipe|joão|thiago/i.test(v.name));
+  _preferredVoice = male || ptVoices[0] || null;
+}
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = pickBestVoice;
+  pickBestVoice();
+}
+
+function higienizarTexto(txt) {
+  return txt
+    .replace(/[#*_`>~]/g, '')           // remove marcação markdown
+    .replace(/\[SK-[A-Z]+\]/g, '')       // remove tags técnicas tipo [SK-PERF]
+    .replace(/https?:\/\/\S+/g, '')      // remove URLs (não precisam ser lidas)
+    .replace(/\s{2,}/g, ' ')             // espaços duplos
+    .trim();
+}
+
 function falarResposta() {
   const body = document.getElementById('outBody');
-  const text = body.textContent.trim();
+  const text = higienizarTexto(body.textContent.trim());
   if (!text || text === 'Aguardando execução...') return;
 
   window.speechSynthesis.cancel(); // para qualquer fala anterior
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'pt-BR';
   utter.rate = 1.0;
+  if (_preferredVoice) utter.voice = _preferredVoice;
   window.speechSynthesis.speak(utter);
 }
 

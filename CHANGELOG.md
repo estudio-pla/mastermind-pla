@@ -16,3 +16,16 @@
   sem exposição de chave no cliente.
 - Acesso travado por senha via Edge Function (netlify/edge-functions/gate.mts) — funciona
   no plano gratuito, sem precisar de upgrade.
+
+## v1.2 — 2026-07-15
+- Gerente nunca mais devolve erro técnico cru: uma re-tentativa automática silenciosa
+  se o Gemini estiver sobrecarregado, e se mesmo assim falhar, devolve uma frase humana
+  ("tive uma dificuldade agora, tenta de novo") em vez de mensagem de erro em código.
+- Voz de leitura (Web Speech Synthesis, nativa do navegador, sem custo e sem limite de
+  caracteres) agora tenta escolher automaticamente uma voz masculina em português, em
+  vez de usar a voz padrão aleatória do sistema.
+- Texto higienizado antes de ser lido em voz alta: remove markdown (#, *, _), tags
+  técnicas ([SK-...]) e URLs, para leitura limpa e sem soletrar símbolos.
+- Decisão registrada: ElevenLabs (voz Jack Caster) não é usada para respostas do
+  Gerente por limite de caracteres da conta gratuita — reservada para os registros
+  narrados (relatórios), não para o chat interativo.
