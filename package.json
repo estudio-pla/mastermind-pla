@@ -1,0 +1,8 @@
+{
+  "name": "mastermind-pla",
+  "version": "1.3.0",
+  "private": true,
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

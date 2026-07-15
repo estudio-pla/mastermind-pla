@@ -41,3 +41,7 @@
   passado por palavra-chave, com data de quando foi escrito.
 - Se o registro permanente falhar por qualquer motivo, o sistema PARA e avisa —
   nunca prossegue para o Gerente sem garantir que o texto foi salvo pra sempre.
+
+## v1.3.1 — correção
+- Adicionado package.json com dependência @netlify/blobs (faltava, causava erro
+  "Cannot find package" nas funções de registrar/buscar).
