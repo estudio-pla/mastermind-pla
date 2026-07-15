@@ -29,3 +29,15 @@
 - Decisão registrada: ElevenLabs (voz Jack Caster) não é usada para respostas do
   Gerente por limite de caracteres da conta gratuita — reservada para os registros
   narrados (relatórios), não para o chat interativo.
+
+## v1.3 — 2026-07-15
+- Adicionada MEMÓRIA ETERNA: todo texto enviado no campo de tarefa/pergunta é
+  registrado permanentemente (Netlify Blobs, store "memoria-eterna"), com data e
+  hora, ANTES de qualquer outra coisa acontecer.
+- Regra estrutural: este sistema NUNCA implementa função de apagar (delete) nesse
+  armazenamento — não existe rota, botão, nem endpoint de exclusão em lugar nenhum
+  do código. Só existe escrever (registrar) e ler (buscar).
+- Criada função de busca (/api/buscar?q=palavra) para encontrar qualquer registro
+  passado por palavra-chave, com data de quando foi escrito.
+- Se o registro permanente falhar por qualquer motivo, o sistema PARA e avisa —
+  nunca prossegue para o Gerente sem garantir que o texto foi salvo pra sempre.

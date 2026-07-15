@@ -415,7 +415,7 @@
 <header class="header">
   <div class="brand">
     <span class="badge">BIOS PLÁ</span>
-    <h1>Mastermind <em>v1.2 · voz limpa e respostas sempre humanas</em></h1>
+    <h1>Mastermind <em>v1.3 · memória eterna, nunca apaga</em></h1>
   </div>
   <div class="api-row">
     <div class="api-dot" id="memDot"></div>
@@ -746,13 +746,37 @@ function falarResposta() {
 async function executar() {
   const input = document.getElementById('taskInput').value.trim();
   const btn   = document.getElementById('execBtn');
+  const btnTop = document.getElementById('execBtnTop');
   const body  = document.getElementById('outBody');
   const ts    = document.getElementById('outTs');
 
   if (!input) { body.innerHTML = '<span style="color:var(--r2)">⚠ Digite uma tarefa ou pergunta.</span>'; return; }
 
   btn.disabled = true;
+  if (btnTop) btnTop.disabled = true;
   resetDots();
+  body.innerHTML = '<span class="empty">Registrando permanentemente...</span>';
+
+  // REGISTRO PERMANENTE — acontece sempre, antes de qualquer outra coisa.
+  // Se isso falhar, paramos aqui — nada é perdido nem seguido sem garantir o registro.
+  try {
+    const regRes = await fetch('/api/registrar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texto: input })
+    });
+    const regData = await regRes.json();
+    if (!regData.ok) {
+      body.innerHTML = `<span style="color:var(--r1)">⚠ Não consegui registrar permanentemente — não prossegui. ${regData.erro || ''}</span>`;
+      btn.disabled = false; if (typeof btnTop !== 'undefined' && btnTop) btnTop.disabled = false;
+      return;
+    }
+  } catch (err) {
+    body.innerHTML = `<span style="color:var(--r1)">⚠ Não consegui registrar permanentemente — não prossegui. ${err.message}</span>`;
+    btn.disabled = false; if (typeof btnTop !== 'undefined' && btnTop) btnTop.disabled = false;
+    return;
+  }
+
   body.innerHTML = '<span class="empty">Processando...</span>';
 
   try {
@@ -792,7 +816,7 @@ async function executar() {
     });
     body.innerHTML = `<span style="color:var(--r1)">ERRO: ${err.message}</span>`;
   } finally {
-    btn.disabled = false;
+    btn.disabled = false; if (typeof btnTop !== 'undefined' && btnTop) btnTop.disabled = false;
   }
 }
 
