@@ -93,3 +93,10 @@
   hora e volta a mostrar "▶ OUVIR". Também volta sozinho ao normal quando a
   fala termina naturalmente. Antes não existia jeito de parar a leitura no
   meio, e o botão nunca mudava de estado.
+
+## v1.7.1 — 2026-07-16 (correção)
+- O botão OUVIR/PARAR dependia do evento "onstart" do navegador para mudar de
+  estado — em alguns celulares (especialmente iPhone) esse evento demora ou
+  nunca dispara, deixando o botão parado em "OUVIR" mesmo com a voz tocando.
+- Corrigido: agora o botão muda de estado imediatamente no clique, usando uma
+  variável própria (_falando), sem depender de confirmação do navegador.

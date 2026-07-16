@@ -415,7 +415,7 @@
 <header class="header">
   <div class="brand">
     <span class="badge">BIOS PLÁ</span>
-    <h1>Mastermind <em>v1.7 · botão ouvir/parar</em></h1>
+    <h1>Mastermind <em>v1.7.1 · botão ouvir corrigido</em></h1>
   </div>
   <div class="api-row">
     <div class="api-dot" id="memDot"></div>
@@ -820,12 +820,15 @@ function copiarResposta() {
   });
 }
 
+let _falando = false;
+
 function falarResposta() {
   const playBtn = document.getElementById('playBtn');
 
   // Se já está falando, o clique para a fala e volta o botão ao normal
-  if (window.speechSynthesis.speaking) {
+  if (_falando) {
     window.speechSynthesis.cancel();
+    _falando = false;
     playBtn.textContent = '▶ OUVIR';
     return;
   }
@@ -839,10 +842,14 @@ function falarResposta() {
   utter.rate = 1.0;
   if (_preferredVoice) utter.voice = _preferredVoice;
 
-  utter.onstart = () => { playBtn.textContent = '■ PARAR'; };
-  utter.onend   = () => { playBtn.textContent = '▶ OUVIR'; };
-  utter.onerror = () => { playBtn.textContent = '▶ OUVIR'; };
+  const resetar = () => { _falando = false; playBtn.textContent = '▶ OUVIR'; };
+  utter.onend   = resetar;
+  utter.onerror = resetar;
 
+  // Muda o botão na hora do clique, sem esperar o navegador confirmar que começou
+  // (em alguns celulares esse aviso demora ou nunca chega)
+  _falando = true;
+  playBtn.textContent = '■ PARAR';
   window.speechSynthesis.speak(utter);
 }
 
