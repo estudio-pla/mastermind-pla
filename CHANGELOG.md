@@ -71,3 +71,18 @@
   o dia todo sem custo; Claude entra só na finalização, recebendo um resumo já
   pronto via copiar/colar — economiza tokens e evita reconstruir contexto do zero
   a cada nova conversa.
+
+## v1.6 — 2026-07-16
+- Adicionado botão "⚙ voz" na área de resposta do Gerente: abre um painel
+  listando todas as vozes disponíveis no aparelho atual (grátis, do próprio
+  navegador/sistema), com botão "testar" (ouve uma amostra) e "usar esta"
+  (trava permanentemente naquele aparelho).
+- Uma vez travada, a voz nunca mais muda sozinha naquele navegador/aparelho —
+  resolve o problema de sorteio aleatório de voz feminina/infantil.
+- Limitação honesta e documentada: a trava é por aparelho/navegador, não
+  global — cada dispositivo tem seu próprio estoque de vozes do sistema, e
+  não existe forma gratuita de garantir o mesmo arquivo de voz em todos os
+  aparelhos simultaneamente (isso exigiria TTS de nuvem pago, rejeitado pela
+  regra de custo zero). Kaue escolhe uma vez por aparelho, e fica definitivo.
+- Voz do Jack Caster (ElevenLabs) permanece intocada, exclusiva para os
+  relatórios HTML narrados — não é afetada por esta mudança.

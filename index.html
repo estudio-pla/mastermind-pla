@@ -415,7 +415,7 @@
 <header class="header">
   <div class="brand">
     <span class="badge">BIOS PLÁ</span>
-    <h1>Mastermind <em>v1.5 · copiar e formatação limpa</em></h1>
+    <h1>Mastermind <em>v1.6 · voz travada por aparelho</em></h1>
   </div>
   <div class="api-row">
     <div class="api-dot" id="memDot"></div>
@@ -490,9 +490,17 @@
         style="background:var(--r3-dim);border:1px solid var(--r3-border);border-radius:5px;color:var(--r3);font-size:14px;padding:4px 10px;cursor:pointer;margin-left:10px">▶ OUVIR</button>
       <button type="button" id="copyBtn" onclick="copiarResposta()"
         style="background:var(--r2-dim);border:1px solid var(--r2-border);border-radius:5px;color:var(--r2);font-size:14px;padding:4px 10px;cursor:pointer;margin-left:6px">⧉ COPIAR</button>
+      <button type="button" id="voiceCfgBtn" onclick="toggleVoicePicker()"
+        style="background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--muted);font-size:14px;padding:4px 10px;cursor:pointer;margin-left:6px">⚙ voz</button>
       <span class="out-ts" id="outTs">—</span>
     </div>
     <div class="out-body" id="outBody"><span class="empty">Aguardando execução...</span></div>
+    <div id="voicePicker" style="display:none;padding:14px;border-top:1px solid var(--border);background:var(--bg2)">
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:10px">
+        VOZES DISPONÍVEIS NESTE APARELHO — escolha uma e ela trava pra sempre aqui
+      </div>
+      <div id="voiceList" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto"></div>
+    </div>
   </div>
 
 </main>
@@ -710,16 +718,69 @@ function toggleMic() {
 }
 
 let _preferredVoice = null;
+const VOZ_TRAVADA_KEY = 'bios_voz_travada';
 
 function pickBestVoice() {
   const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return;
+
+  // 1) Se já existe uma escolha travada neste aparelho, usa ela sempre
+  const travada = localStorage.getItem(VOZ_TRAVADA_KEY);
+  if (travada) {
+    const achou = voices.find(v => `${v.name}|${v.lang}` === travada);
+    if (achou) { _preferredVoice = achou; renderVoicePicker(voices); return; }
+  }
+
+  // 2) Sem escolha travada ainda — heurística provisória, só até o usuário escolher
   const ptVoices = voices.filter(v => v.lang.toLowerCase().startsWith('pt'));
-  // Tenta achar voz masculina explícita primeiro
   const male = ptVoices.find(v => /male|homem|daniel|ricardo|felipe|joão|thiago/i.test(v.name));
-  _preferredVoice = male || ptVoices[0] || null;
+  _preferredVoice = male || ptVoices[0] || voices[0];
+  renderVoicePicker(voices);
 }
 if (window.speechSynthesis) {
   window.speechSynthesis.onvoiceschanged = pickBestVoice;
+  pickBestVoice();
+}
+
+function renderVoicePicker(voices) {
+  const lista = document.getElementById('voiceList');
+  if (!lista) return;
+  const travada = localStorage.getItem(VOZ_TRAVADA_KEY);
+  const ptVoices = voices.filter(v => v.lang.toLowerCase().startsWith('pt'));
+  const outras = voices.filter(v => !v.lang.toLowerCase().startsWith('pt'));
+  const ordenadas = [...ptVoices, ...outras];
+
+  lista.innerHTML = ordenadas.map(v => {
+    const chave = `${v.name}|${v.lang}`;
+    const ativa = chave === travada;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid ${ativa ? 'var(--r3-border)' : 'var(--border)'};border-radius:5px;background:${ativa ? 'var(--r3-dim)' : 'transparent'}">
+      <span style="flex:1;font-size:12px;color:${ativa ? 'var(--r3)' : 'var(--text)'}">${v.name} <span style="color:var(--muted)">(${v.lang})</span>${ativa ? ' ✓ travada' : ''}</span>
+      <button type="button" onclick="testarVoz('${chave.replace(/'/g,"\\'")}')" style="background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:3px 8px;cursor:pointer">▶ testar</button>
+      <button type="button" onclick="travarVoz('${chave.replace(/'/g,"\\'")}')" style="background:var(--r3-dim);border:1px solid var(--r3-border);border-radius:4px;color:var(--r3);font-size:11px;padding:3px 8px;cursor:pointer">usar esta</button>
+    </div>`;
+  }).join('');
+}
+
+function toggleVoicePicker() {
+  const p = document.getElementById('voicePicker');
+  const abrir = p.style.display === 'none';
+  p.style.display = abrir ? 'block' : 'none';
+  if (abrir) renderVoicePicker(window.speechSynthesis.getVoices());
+}
+
+function testarVoz(chave) {
+  const voices = window.speechSynthesis.getVoices();
+  const v = voices.find(vv => `${vv.name}|${vv.lang}` === chave);
+  if (!v) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance('Olá, Kaue. Esta é uma das vozes disponíveis no seu aparelho.');
+  utter.voice = v;
+  utter.lang = v.lang;
+  window.speechSynthesis.speak(utter);
+}
+
+function travarVoz(chave) {
+  localStorage.setItem(VOZ_TRAVADA_KEY, chave);
   pickBestVoice();
 }
 
