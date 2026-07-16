@@ -86,3 +86,10 @@
   regra de custo zero). Kaue escolhe uma vez por aparelho, e fica definitivo.
 - Voz do Jack Caster (ElevenLabs) permanece intocada, exclusiva para os
   relatórios HTML narrados — não é afetada por esta mudança.
+
+## v1.7 — 2026-07-16
+- Corrigido: botão "OUVIR" agora tem dois estágios. Ao clicar, começa a falar
+  e o próprio botão vira "■ PARAR". Clicando de novo, interrompe a fala na
+  hora e volta a mostrar "▶ OUVIR". Também volta sozinho ao normal quando a
+  fala termina naturalmente. Antes não existia jeito de parar a leitura no
+  meio, e o botão nunca mudava de estado.

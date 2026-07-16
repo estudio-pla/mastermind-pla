@@ -415,7 +415,7 @@
 <header class="header">
   <div class="brand">
     <span class="badge">BIOS PLÁ</span>
-    <h1>Mastermind <em>v1.6 · voz travada por aparelho</em></h1>
+    <h1>Mastermind <em>v1.7 · botão ouvir/parar</em></h1>
   </div>
   <div class="api-row">
     <div class="api-dot" id="memDot"></div>
@@ -821,15 +821,28 @@ function copiarResposta() {
 }
 
 function falarResposta() {
+  const playBtn = document.getElementById('playBtn');
+
+  // Se já está falando, o clique para a fala e volta o botão ao normal
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    playBtn.textContent = '▶ OUVIR';
+    return;
+  }
+
   const body = document.getElementById('outBody');
   const text = higienizarTexto(body.textContent.trim());
   if (!text || text === 'Aguardando execução...') return;
 
-  window.speechSynthesis.cancel(); // para qualquer fala anterior
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'pt-BR';
   utter.rate = 1.0;
   if (_preferredVoice) utter.voice = _preferredVoice;
+
+  utter.onstart = () => { playBtn.textContent = '■ PARAR'; };
+  utter.onend   = () => { playBtn.textContent = '▶ OUVIR'; };
+  utter.onerror = () => { playBtn.textContent = '▶ OUVIR'; };
+
   window.speechSynthesis.speak(utter);
 }
 
