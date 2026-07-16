@@ -59,3 +59,15 @@
   ~2s) em vez de um "Processando..." estático parado.
 - Pendente: aniversário da Luana ainda não cadastrado — falta a data (dia/mês).
   Luana ainda não tem usuário/senha próprios em GATE_USERS.
+
+## v1.5 — 2026-07-16
+- Adicionado botão "COPIAR" ao lado de "OUVIR" na área de resposta do Gerente —
+  copia o texto puro, pronto pra colar em qualquer lugar (ex: trazer de volta
+  pro Claude, sem precisar reescrever contexto).
+- Corrigido problema de símbolos crus (# e **) aparecendo na tela: a resposta do
+  Gerente agora passa por um conversor de markdown simples antes de aparecer,
+  virando títulos, negrito e listas de verdade, nunca símbolo solto.
+- Fluxo de trabalho definido com Kaue: Gemini (Mastermind) registra e conversa
+  o dia todo sem custo; Claude entra só na finalização, recebendo um resumo já
+  pronto via copiar/colar — economiza tokens e evita reconstruir contexto do zero
+  a cada nova conversa.

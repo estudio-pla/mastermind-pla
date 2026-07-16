@@ -415,7 +415,7 @@
 <header class="header">
   <div class="brand">
     <span class="badge">BIOS PLÁ</span>
-    <h1>Mastermind <em>v1.4 · multiusuário e agenda</em></h1>
+    <h1>Mastermind <em>v1.5 · copiar e formatação limpa</em></h1>
   </div>
   <div class="api-row">
     <div class="api-dot" id="memDot"></div>
@@ -488,6 +488,8 @@
       <span class="out-title">Output · Gerente PLÁ</span>
       <button type="button" id="playBtn" onclick="falarResposta()"
         style="background:var(--r3-dim);border:1px solid var(--r3-border);border-radius:5px;color:var(--r3);font-size:14px;padding:4px 10px;cursor:pointer;margin-left:10px">▶ OUVIR</button>
+      <button type="button" id="copyBtn" onclick="copiarResposta()"
+        style="background:var(--r2-dim);border:1px solid var(--r2-border);border-radius:5px;color:var(--r2);font-size:14px;padding:4px 10px;cursor:pointer;margin-left:6px">⧉ COPIAR</button>
       <span class="out-ts" id="outTs">—</span>
     </div>
     <div class="out-body" id="outBody"><span class="empty">Aguardando execução...</span></div>
@@ -730,6 +732,33 @@ function higienizarTexto(txt) {
     .trim();
 }
 
+let _ultimaRespostaTexto = '';
+
+function markdownParaHtml(md) {
+  let h = md
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^### (.*)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.*)$/gm, '<h3>$1</h3>')
+    .replace(/^# (.*)$/gm, '<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.*)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+  return `<p>${h}</p>`;
+}
+
+function copiarResposta() {
+  if (!_ultimaRespostaTexto) return;
+  navigator.clipboard.writeText(_ultimaRespostaTexto).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const original = btn.textContent;
+    btn.textContent = '✓ copiado';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  });
+}
+
 function falarResposta() {
   const body = document.getElementById('outBody');
   const text = higienizarTexto(body.textContent.trim());
@@ -818,8 +847,8 @@ async function executar() {
     setDot(4,'active'); await wait(300); setDot(4,'done');
 
     ts.textContent = new Date().toLocaleString('pt-BR');
-    body.innerHTML = '';
-    body.textContent = text;
+    _ultimaRespostaTexto = text;
+    body.innerHTML = markdownParaHtml(text);
 
   } catch (err) {
     [1,2,3,4].forEach(i => {
